@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>视频笔记助手</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: '微软雅黑', sans-serif;
+      background-image: url("avocado.jpg");
+      background-size: cover;
+      display: flex;
+      height: 100vh;
+    }
+    .video-container {
+      flex: 2;
+      background: white;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: '微软雅黑';
+      border-radius: 16px;
+      margin: 20px;
+    }
+    .chat-container {
+      flex: 1;
+      background: #f5f5c9;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      font-family: '微软雅黑';
+      border-left: 1px solid #ccc;
+      border-radius: 16px;
+      margin: 20px;
+    }
+    .chat-box {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #f5f5c9;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+    }
+    .msg {
+    margin: 6px 0;
+    padding: 8px 12px; /* Adjusted padding for bubble look */
+    border: none;
+    max-width: 80%;
+    border-radius: 18px; /* More rounded corners for bubble */
+    word-wrap: break-word; /* Ensure long words break */
+    clear: both; /* Clear floats to prevent overlapping */
+    }
+    .system {
+      color: #2a4f33;
+      font-weight: normal;
+    }
+    .system {
+    color: #2a4f33;
+    background-color: #f5f5c9; /* Light green for system messages */
+    align-self: flex-start; /* Align system messages to the left */
+    float: left; /* Float left for system messages */
+    }
+    .user {
+    background-color: #d2e8cf; /* A nice light green for user messages */
+    color: #333; /* Darker text for better contrast */
+    text-align: right; /* Text aligns right within the bubble */
+    align-self: flex-end; /* Align user messages to the right */
+    float: right; /* Float right for user messages */
+    }
+    /*
+    .user {
+      text-align: right;
+      color: black;
+    }*/
+    .chat-box::after {
+    content: "";
+    display: table;
+    clear: both;
+    }
+    .quick-button {
+      width: 150px;
+      padding: 10px 12px;
+      font-size: 14px;
+      border: 2px solid #77bfa3;
+      background-color: #d2e8cf;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: '微软雅黑';
+    }
+    input[type="text"] {
+      font-family: '微软雅黑';
+      padding: 8px;
+      border: 1px solid #77bfa3;
+    }
+    #chatInput {
+    flex: 1;
+    padding: 6px;
+    border: 2px solid #77bfa3;
+    border-radius: 12px;
+    }
+    button {
+      font-family: '微软雅黑';
+      padding: 6px 12px;
+      background-color: #d2e8cf;
+      border: 2px solid #77bfa3;
+      cursor: pointer;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="video-container">
+    <h2>和我们一起种下一颗牛油果</h2>
+    <video id="myVideo" width="1000" height="680" controls>
+      <source src="./videos/ml.mp4" type="video/mp4" />
+      您的浏览器不支持 video 标签。
+    </video>
+  </div>
+
+  <div class="chat-container">
+    <div class="chat-box" id="chatBox">
+      <div class="msg system">你好！我可以帮你分析视频并总结为学习笔记。</div>
+    </div>
+  
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px;">
+        <button class="quick-button" onclick="sendMessage('总结视频主要内容')">总结视频主要内容</button>
+        <button class="quick-button" onclick="sendMessage('生成视频学习笔记')">生成视频学习笔记</button>
+      </div>
+  
+    <!-- 输入框 -->
+    <div style="display: flex; gap: 8px;">
+      <input id="chatInput" type="text" placeholder="输入你的问题..." 
+             style="flex: 1; padding: 6px; border: 2px solid #77bfa3;" />
+      <button onclick="sendMessage()" 
+              style="border: 2px solid #77bfa3;">发送</button>
+    </div>
+  </div>
+  <style>
+    .buttons button {
+      width: 200px; /* 或设置具体像素宽度，如 200px */
+      padding: 10px 16px;
+      font-size: 16px;
+      border: 2px solid #77bfa3;
+      background-color: #d2e8cf;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  
+    .buttons {
+      display: flex;
+      flex-direction: column; /* 垂直排列可确保按钮对齐一致 */
+      gap: 10px;
+    }
+  </style>
+  
+  <script>
+    const video = document.getElementById("myVideo");
+    const chatBox = document.getElementById("chatBox");
+    const chatInput = document.getElementById("chatInput");
+
+    function sendMessage(text) {
+      const userText = text || chatInput.value.trim();
+      if (!userText) return;
+
+      appendMessageLineByLine('user', userText);
+      chatInput.value = '';
+
+      setTimeout(() => {
+        const reply = generateMockReply(userText);
+        appendMessageLineByLine('system', "正在生成……请稍候");
+        setTimeout(() => {
+          appendMessageLineByLine('system', reply);
+        }, 30000);
+        
+      }, 500);
+    }
+
+    
+
+
+    function formatOutline(outlineObj) {
+      let result = `📘 ${outlineObj.title}\n\n`;
+
+      outlineObj.sections.forEach(section => {
+        result += `🔹 ${section.id}. ${section.title}\n`;
+        section.points.forEach(point => {
+          result += `  - ${point}\n`;
+        });
+        result += '\n';
+      });
+
+      return result;
+    }
+
+
+
+
+    function appendMessage(role, content) {
+      const msg = document.createElement('div');
+      msg.className = 'msg ' + role;
+      msg.innerHTML = content.replace(/\n/g, "<br>"); // ✅ 这里替换换行符
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    function appendMessageLineByLine(role, content, delay = 80) {
+      const lines = content.split('\n'); // 按行切分文本
+      const msgContainer = document.createElement('div');
+      msgContainer.className = 'msg ' + role;
+      chatBox.appendChild(msgContainer);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      let i = 0;
+      function showNextLine() {
+        if (i < lines.length) {
+          const line = document.createElement('div');
+          line.textContent = lines[i];
+          msgContainer.appendChild(line);
+          chatBox.scrollTop = chatBox.scrollHeight;
+          i++;
+          setTimeout(showNextLine, delay);
+        }
+      }
+
+      showNextLine();
+    }
+
+
+
+    const multiLineText = {  };
+    console.log(multiLineText);
+    function generateMockReply(userText) {
+      if (userText.includes("总结")) {
+        fetch('http://localhost:3000/generate-outline')
+          .then(response => response.text())
+          .then(data => {
+            appendMessage('system', data);
+          })
+          .catch(err => {
+            appendMessage('system', "请求出错：" + err.message);
+          });
+          return formatOutline(multiLineText);
+      }
+      
+      if (userText.includes("学习笔记")) return "学习笔记：1. 牛油果喜欢阳光充足的环境；2. 需良好排水的土壤。";
+      return "这是一个示例回复（你可以接入真实接口）";
+    }
+  </script>
+
+</body>
+</html>
